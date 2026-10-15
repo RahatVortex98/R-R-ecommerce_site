@@ -4,6 +4,7 @@ use Illuminate\Database\Seeder;
 use App\Models\{Product,Category,Brand,Concern,Article,DeliveryZone};
 class DemoCatalogSeeder extends Seeder {
     public function run(): void {
+        foreach(glob(public_path('images/*')) as $source){$path='images/'.basename($source);if(!\Storage::disk('public')->exists($path))\Storage::disk('public')->put($path,file_get_contents($source));}
         $skin=Category::firstOrCreate(['slug'=>'skincare'],['name'=>'Skincare']);
         $body=Category::firstOrCreate(['slug'=>'body-care'],['name'=>'Body care']);
         $hair=Category::firstOrCreate(['slug'=>'hair-care'],['name'=>'Hair care']);

@@ -27,5 +27,10 @@ class AdminWorkflowTest extends TestCase {
         $this->expectException(\Illuminate\Validation\ValidationException::class);
         $p->skus()->create(['code'=>'BAD-PRICE','regular_minor'=>100000,'sale_minor'=>110000]);
     }
+    public function test_sample_product_can_be_edited_without_reuploading_its_image(): void{
+        \Storage::fake('public');$this->seed(\Database\Seeders\DemoCatalogSeeder::class);$product=Product::first();
+        Livewire::test(ManageProducts::class)->mountAction(\Filament\Actions\Testing\TestAction::make('edit')->table($product))->callMountedAction()->assertHasNoFormErrors();
+        $this->assertSame(1,$product->images()->count());
+    }
 }
 
