@@ -1,0 +1,1 @@
+<h1>Thank you for your order</h1><p>Order reference: {{ $order->public_reference }}</p><p>Cash on delivery total: {{ \App\Services\PricingService::money($order->total_minor) }}</p><p>We will contact you to confirm your order before dispatch.</p>

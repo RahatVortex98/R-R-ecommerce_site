@@ -1,0 +1,18 @@
+<?php
+namespace App\Filament\Resources;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Tables\Table;
+use Filament\Forms\Components\{TextInput,Textarea,Select,Toggle,DateTimePicker,Repeater,FileUpload,RichEditor,TagsInput,ColorPicker};
+use Filament\Tables\Columns\{TextColumn,IconColumn};
+use Filament\Actions\{Action,CreateAction,EditAction,DeleteAction};
+use Filament\Tables\Filters\SelectFilter;
+use Illuminate\Database\Eloquent\Model;
+
+class ProductResource extends Resource {
+ protected static ?string $model=\App\Models\Product::class;
+ protected static string|\UnitEnum|null $navigationGroup='Catalog';
+ public static function form(Schema $schema): Schema{return $schema->components([TextInput::make('name')->required()->maxLength(190),TextInput::make('slug')->required()->regex('/^[a-z0-9]+(?:-[a-z0-9]+)*$/')->unique(ignoreRecord:true),Select::make('category_id')->relationship('category','name')->searchable()->preload(),Select::make('brand_id')->relationship('brand','name')->searchable()->preload(),Toggle::make('published')->default(false),Toggle::make('sample')->label('Demo product')->default(false),Textarea::make('description')->columnSpanFull(),Textarea::make('ingredients'),Textarea::make('usage'),Select::make('concerns')->relationship('concerns','name')->multiple()->preload(),Repeater::make('skus')->relationship()->schema([TextInput::make('code')->required()->unique(ignoreRecord:true),TextInput::make('label')->required()->default('Standard'),TextInput::make('regular_minor')->label('Regular price (BDT)')->numeric()->minValue(0.01)->required()->formatStateUsing(fn($state)=>$state===null?null:$state/100)->dehydrateStateUsing(fn($state)=>(int)round($state*100)),TextInput::make('sale_minor')->label('Sale price (BDT), optional')->numeric()->minValue(0.01)->formatStateUsing(fn($state)=>$state===null?null:$state/100)->dehydrateStateUsing(fn($state)=>filled($state)?(int)round($state*100):null),DateTimePicker::make('sale_starts_at')->timezone('Asia/Dhaka'),DateTimePicker::make('sale_ends_at')->timezone('Asia/Dhaka')])->columns(2)->deletable(false)->columnSpanFull()->helperText('Manage stock through Inventory → Adjust stock after saving. Prices must be positive; sale price must be lower than regular price.'),Repeater::make('images')->relationship()->schema([FileUpload::make('path')->label('Product image')->disk('public')->directory('products')->image()->acceptedFileTypes(['image/jpeg','image/png','image/webp'])->maxSize(4096)->visibility('public')->required(),TextInput::make('alt')->required()->maxLength(190)])->orderColumn('position')->columnSpanFull(),TextInput::make('meta_title')->maxLength(70),Textarea::make('meta_description')->maxLength(170),FileUpload::make('social_image')->disk('public')->directory('social')->image()->acceptedFileTypes(['image/jpeg','image/png','image/webp'])->maxSize(4096)])->columns(2);}
+ public static function table(Table $table): Table{return $table->columns([TextColumn::make('name')->searchable()->sortable(),TextColumn::make('category.name')->label('Category'),TextColumn::make('brand.name')->label('Brand'),IconColumn::make('published')->boolean(),TextColumn::make('updated_at')->dateTime()->sortable()])->recordActions([EditAction::make(),DeleteAction::make()]);}
+ public static function getPages(): array{return ['index'=>\App\Filament\Resources\ProductResource\Pages\ManageProducts::route('/')];}
+}
