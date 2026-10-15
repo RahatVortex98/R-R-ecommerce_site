@@ -6,10 +6,11 @@ trait HasPublicSlug
     {
         static::updating(function($model){
             if($model->isDirty('slug')){
-                $prefix=$model instanceof Article?'/journal/':'/products/';
+                $prefix=$model->publicPathPrefix();
                 SlugRedirect::updateOrCreate(['old_path'=>$prefix.$model->getOriginal('slug')],['model_type'=>$model::class,'model_id'=>$model->id]);
             }
         });
     }
     public function getRouteKeyName(): string{return 'slug';}
+    public function publicPathPrefix(): string{return match(true){$this instanceof Article=>'/journal/',$this instanceof Category=>'/categories/',default=>'/products/'};}
 }

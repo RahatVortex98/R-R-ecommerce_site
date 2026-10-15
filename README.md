@@ -53,7 +53,7 @@ On-hand = physical stock; reserved = submitted, unshipped orders; available = on
 2. Placing an order locks requested SKUs in a database transaction and reserves quantities. If any item is unavailable, the entire submission is rejected. Duplicate submissions use the same checkout token and cannot reserve twice.
 3. Pending orders expire after 24 hours by default. Confirmation removes expiry. Pending/confirmed cancellations and pending expiry release reservations once.
 4. Dispatch deducts both on-hand and reserved quantities. Delivery does not deduct again.
-5. Mark Returned only after the parcel is physically back. Inspect it and explicitly restock the sellable quantity; the system prevents restocking more than was returned.
+5. Mark Returned only after the parcel is physically back. Inspect it and explicitly restock the sellable quantity; the system prevents restocking more than was returned. Each inspected-return action has a unique operation reference, so retries do not double-restock partial quantities.
 
 Order line names, variant labels, prices, discounts, delivery fees and totals are snapshots. Later catalog edits do not rewrite an existing order. Orders are not deleted through the panel.
 
@@ -88,11 +88,11 @@ Run the Laravel scheduler every minute using your host's scheduler/cron:
 php artisan schedule:run
 ```
 
-The scheduled `orders:expire` command releases overdue pending reservations. Email jobs dispatch after the transaction commits; a mail failure does not undo an accepted order. Check failed jobs/logs and use `php artisan queue:retry all` after correcting a mail outage. SMTP is an at-least-once delivery mechanism: a provider timeout after acceptance can still produce a duplicate email on retry.
+The scheduled `orders:expire` command releases overdue pending reservations. Notification recipients are snapshotted as durable delivery rows inside the order transaction. Email jobs dispatch after commit and record each recipient separately, so failure of owner email does not resend a successful customer email. The scheduled `orders:notify` command recovers undelivered notifications, including jobs that never entered the queue during an outage. You can also run it manually after correcting configuration. A mail failure does not undo an accepted order. Check failed jobs/logs and use `php artisan queue:retry all` after correcting a mail outage. SMTP is an at-least-once delivery mechanism: a provider timeout after acceptance can still produce a duplicate email on retry.
 
 ## SEO
 
-Public HTML is server rendered. Product pages have Product/Offer data; articles have BlogPosting/author/date data; both include breadcrumbs, canonical URLs and social tags. Product and article slug edits record 301 redirects. Dedicated `/categories/{slug}` pages support category metadata and appear in the sitemap. Use `/sitemap.xml` and `/robots.txt` after configuring the real domain. Search/filter results, cart, checkout, admin and order confirmation are noindex. Confirmation omits personal customer details and uses an unguessable reference.
+Public HTML is server rendered. Product pages have Product/Offer data; articles have BlogPosting/author/date data; both include breadcrumbs, canonical URLs and social tags. Product, category and article slug edits record 301 redirects; category navigation follows your current categories. Normal paginated indexes preserve the page number in their canonical URL. Dedicated `/categories/{slug}` pages support category metadata and appear in the sitemap. Use `/sitemap.xml` and `/robots.txt` after configuring the real domain. Search/filter results, cart, checkout, admin and order confirmation are noindex. Confirmation omits personal customer details and uses an unguessable reference.
 
 Homepage membership is briefly cached, invalidated by product/SKU/image edits, and expires at sale schedule boundaries. Prices are calculated from fresh model data. Settings cache is invalidated on saves. No review ratings are fabricated. Search rankings and rich results are not guaranteed.
 
@@ -134,4 +134,5 @@ Use a PHP host/VPS with MySQL, HTTPS, persistent uploads, queue supervision and 
 8. Pass MySQL concurrency tests, then place and cancel a real staging test order and verify stock, email, mobile checkout, canonical domain and sitemap before accepting customers.
 
 The ZIP excludes .env, local SQLite data, test orders, logs, dependencies and Git history. It includes source, lock files and built frontend assets. Install dependencies before running it. Hosting/domain, real inventory and mail credentials still require owner configuration.
+
 

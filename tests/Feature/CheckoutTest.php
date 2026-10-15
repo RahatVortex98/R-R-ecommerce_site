@@ -63,4 +63,19 @@ class CheckoutTest extends TestCase
     {
         $this->get('/order/1')->assertNotFound();
     }
+
+    public function test_retry_that_waited_for_stock_lock_returns_the_winning_order(): void
+    {
+        $sku=$this->item(1);$customer=$this->customer();$winner=null;$interleaved=false;
+        \DB::connection()->beforeExecuting(function($sql)use(&$interleaved,&$winner,$sku,$customer){
+            if(!$interleaved&&str_starts_with(strtolower($sql),'select')&&str_contains($sql,'skus')){
+                $interleaved=true;
+                // A competing submit wins after our token checks, before our stock read.
+                $winner=app(CheckoutService::class)->submit($customer,[$sku->id=>1],'shared-retry-token');
+            }
+        });
+        $retry=app(CheckoutService::class)->submit($customer,[$sku->id=>1],'shared-retry-token');
+        $this->assertTrue($interleaved);$this->assertSame($winner->id,$retry->id);
+        $this->assertSame(1,Order::count());$this->assertSame(1,$sku->fresh()->reserved);
+    }
 }

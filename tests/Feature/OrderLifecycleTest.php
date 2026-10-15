@@ -59,9 +59,10 @@ class OrderLifecycleTest extends CheckoutTest
         foreach ([OrderStatus::Confirmed,OrderStatus::Dispatched,OrderStatus::Returned] as $status) $service->transition($order,$status);
         $this->assertSame(3,$sku->fresh()->on_hand);
         $actor=User::factory()->create(['role'=>'owner']);
-        $service->restockReturn($order->items()->first(),2,$actor);
+        $service->restockReturn($order->items()->first(),2,$actor,'return-event-one');
         $this->assertSame(5,$sku->fresh()->on_hand);
         $this->expectException(ValidationException::class);
-        $service->restockReturn($order->items()->first(),1,$actor);
+        $service->restockReturn($order->items()->first(),1,$actor,'return-event-two');
     }
 }
+

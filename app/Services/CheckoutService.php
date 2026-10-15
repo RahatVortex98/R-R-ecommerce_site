@@ -28,6 +28,9 @@ class CheckoutService
                 $zone=DeliveryZone::where('active',true)->find($data['delivery_zone_id']);
                 if(!$zone) throw ValidationException::withMessages(['delivery_zone_id'=>'Please select an available delivery area.']);
                 $skus=Sku::with('product')->whereIn('id',array_keys($cart))->orderBy('id')->lockForUpdate()->get()->keyBy('id');
+                // A retry may have waited while the winning request reserved the last unit.
+                // Use a current locking read: a plain read can retain MySQL's earlier snapshot.
+                if($existing=Order::where('checkout_token',$token)->lockForUpdate()->first())return $existing;
                 $lines=[];$subtotal=0;$fingerprint=[];$pricing=app(PricingService::class);
                 foreach($cart as $id=>$quantity){
                     $sku=$skus->get($id);
@@ -49,7 +52,9 @@ class CheckoutService
                     $sku->reserved+=$quantity;$sku->save();
                     $sku->movements()->create(['order_id'=>$order->id,'on_hand_delta'=>0,'reserved_delta'=>$quantity,'reason'=>'COD reservation']);
                 }
-                DB::afterCommit(function()use($order){try{SendOrderConfirmation::dispatch($order->id);}catch(\Throwable $e){report($e);}});
+                $recipients=array_filter(array_unique([$order->email,app(StoreSettings::class)->get('notification_recipient')]));
+                foreach($recipients as $recipient)$order->notificationDeliveries()->create(['recipient'=>$recipient]);
+                DB::afterCommit(function()use($order){try{SendOrderConfirmation::enqueue($order->id);}catch(\Throwable $e){report($e);}});
                 return $order;
             },3);
         }catch(UniqueConstraintViolationException $e){return Order::where('checkout_token',$token)->first()??throw $e;}

@@ -27,15 +27,18 @@ class OrderLifecycleService
             $order->save();return $order;
         },3);
     }
-    public function restockReturn(OrderItem $item,int $quantity,User $actor): void
+    public function restockReturn(OrderItem $item,int $quantity,User $actor,string $requestToken): void
     {
-        DB::transaction(function()use($item,$quantity,$actor){
+        if(!preg_match('/^[a-zA-Z0-9-]{8,100}$/',$requestToken))throw ValidationException::withMessages(['quantity'=>'Invalid restock request reference.']);
+        DB::transaction(function()use($item,$quantity,$actor,$requestToken){
             $order=Order::lockForUpdate()->findOrFail($item->order_id);
             $item=OrderItem::lockForUpdate()->findOrFail($item->id);
+            $operationKey='return:'.$item->id.':'.$requestToken;
+            if(\App\Models\InventoryMovement::where('operation_key',$operationKey)->exists())return;
             if($order->status!==OrderStatus::Returned||$quantity<1||$quantity>$item->quantity-$item->restocked)throw ValidationException::withMessages(['quantity'=>'Only inspected, un-restocked returned units may be added back.']);
             $sku=Sku::lockForUpdate()->findOrFail($item->sku_id);$sku->on_hand+=$quantity;$sku->save();
             $item->restocked+=$quantity;$item->save();
-            $sku->movements()->create(['order_id'=>$order->id,'user_id'=>$actor->id,'on_hand_delta'=>$quantity,'reserved_delta'=>0,'reason'=>'Inspected return restock']);
+            $sku->movements()->create(['order_id'=>$order->id,'user_id'=>$actor->id,'on_hand_delta'=>$quantity,'reserved_delta'=>0,'reason'=>'Inspected return restock','operation_key'=>$operationKey]);
         },3);
     }
 }
