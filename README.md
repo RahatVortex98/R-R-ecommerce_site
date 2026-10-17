@@ -136,3 +136,5 @@ Use a PHP host/VPS with MySQL, HTTPS, persistent uploads, queue supervision and 
 The ZIP excludes .env, local SQLite data, test orders, logs, dependencies and Git history. It includes source, lock files and built frontend assets. Install dependencies before running it. Hosting/domain, real inventory and mail credentials still require owner configuration.
 
 
+#   R - R - e c o m m e r c e _ s i t e  
+ 
