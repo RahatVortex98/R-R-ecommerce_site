@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\{Home,Catalog,ProductDetail,Cart,Checkout,BlogIndex,ArticleDetail};
 use App\Http\Controllers\{OrderConfirmationController,SitemapController,RobotsController};
@@ -18,3 +19,8 @@ Route::get('/robots.txt',RobotsController::class);
 Route::get('/media/{path}',\App\Http\Controllers\PublicMediaController::class)->where('path','.*')->name('media');
 Route::get('/storage/{path}',\App\Http\Controllers\PublicMediaController::class)->where('path','.*');
 Route::get('/admin/orders/{order}/print',function(\App\Models\Order $order){\Gate::authorize('view',$order);return view('orders.print',compact('order'));})->middleware('auth')->name('orders.print');
+
+Route::get('/foo', function () {
+    Artisan::call('storage:link');
+    return redirect()->route('home')->with('success','Storage link created successfully.');
+});
