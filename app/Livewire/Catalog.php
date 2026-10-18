@@ -22,7 +22,7 @@ class Catalog extends Storefront {
             if($this->sale)$eligible->whereRaw($active,[$at,$at]);
             $fallback=\App\Models\Sku::query()->selectRaw($price,[$at,$at])->whereColumn('skus.product_id','products.id')->orderBy('id')->limit(1);
             $query->select('products.*')->selectSub($eligible,'available_price_minor')->selectSub($fallback,'fallback_price_minor')->orderByRaw('coalesce(available_price_minor,fallback_price_minor) '.($this->sort==='price-low'?'asc':'desc'))->orderBy('id');
-        }else $query->latest();
+        }else $query->latest('id');
         $categoryPage=$this->categorySlug?Category::where('slug',$this->categorySlug)->firstOrFail():null;
         $title=$categoryPage?($categoryPage->meta_title?:$categoryPage->name.' — R&R Care BD'):($this->sale?'Beauty offers — R&R Care BD':'Shop skincare & beauty — R&R Care BD');
         $canonical=$categoryPage?route('category',$categoryPage->slug):url('/shop');$page=(int)$this->getPage();if($page>1)$canonical.='?page='.$page;

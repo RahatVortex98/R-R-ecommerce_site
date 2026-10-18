@@ -34,7 +34,7 @@ class CheckoutService
                 $lines=[];$subtotal=0;$fingerprint=[];$pricing=app(PricingService::class);
                 foreach($cart as $id=>$quantity){
                     $sku=$skus->get($id);
-                    if(!$sku||!$sku->product->published||$sku->availableQuantity()<$quantity) throw ValidationException::withMessages(['cart'=>'An item is unavailable or its quantity exceeds current stock. Please review your cart.']);
+                    if(!$sku||!$sku->product?->published||$sku->availableQuantity()<$quantity) throw ValidationException::withMessages(['cart'=>'An item is unavailable or its quantity exceeds current stock. Please review your cart.']);
                     $quote=$pricing->quote($sku,CarbonImmutable::now());
                     $subtotal+=$quote['current_minor']*$quantity;
                     $fingerprint[]=$id.':'.$quantity.':'.$quote['current_minor'];
