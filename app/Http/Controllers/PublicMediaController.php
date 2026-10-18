@@ -2,7 +2,7 @@
 namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Storage;
 class PublicMediaController {
-    /** Fallback for local hosts that cannot create a public/storage symlink. */
+    /** Serve uploads independently of web-server /storage symlink restrictions. */
     public function __invoke(string $path){
         $regular=preg_match('#^(products|journal|branding|social|images)/[a-zA-Z0-9._-]+\.(jpe?g|png|webp)$#i',$path);
         $sample=preg_match('#^images/(sample-[a-z]+|hero-products|journal-[a-z0-9]+)\.svg$#',$path);

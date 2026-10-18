@@ -6,4 +6,5 @@ use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 class CatalogObserver implements ShouldHandleEventsAfterCommit {
     public function saved(Model $model): void{Cache::forget('home-catalog');}
     public function deleted(Model $model): void{Cache::forget('home-catalog');}
+    public function restored(Model $model): void{Cache::forget('home-catalog');}
 }

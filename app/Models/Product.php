@@ -4,6 +4,7 @@ use Illuminate\Database\Eloquent\Model;
 class Product extends Model
 {
     use HasPublicSlug;
+    use \Illuminate\Database\Eloquent\SoftDeletes;
     protected $guarded=[];
     protected function casts(): array{return ['published'=>'boolean','sample'=>'boolean'];}
     public function scopePublished($query){return $query->where('published',true);}
