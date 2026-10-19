@@ -7,5 +7,7 @@
 <img src="{{ $product->imageUrl() }}" @if($product->images->first()?->srcset()) srcset="{{ $product->images->first()->srcset() }}" sizes="(max-width:700px) 45vw, 25vw" @endif alt="{{ $product->images->first()?->alt??$product->name }}" width="400" height="450" loading="lazy">
 </a><div class="product-info"><span class="product-brand">{{ $product->brand?->name??'Everyday care' }}</span><h3><a href="{{ route('product',$product->slug) }}">{{ $product->name }}</a></h3>
 @if($quote)<div class="price">{{ \App\Services\PricingService::money(($regularPriceOnly??false)?$quote['regular_minor']:$quote['current_minor']) }}@if($showSale)<del>{{ \App\Services\PricingService::money($quote['regular_minor']) }}</del><span class="saving">Save {{ \App\Services\PricingService::money($quote['saving_minor']) }}</span>@endif</div>@else<span class="muted">Coming soon</span>@endif</div>
-<button class="card-cart" @disabled(!$sku||$sku->availableQuantity()<1) @if($sku) wire:click="add({{ $sku->id }})" @endif wire:loading.attr="disabled"><span>{{ $sku&&$sku->availableQuantity()>0?'Add to bag':'Out of stock' }}</span><span aria-hidden="true">＋</span></button>
+@php($availableQuantity=$sku?->availableQuantity()??0)
+<div class="product-stock {{ $availableQuantity>0?'in-stock':'out-of-stock' }}"><span>{{ $availableQuantity>0?'In stock':'Out of stock' }}</span>@if($availableQuantity>0)<span>{{ $availableQuantity }} available</span>@endif</div>
+<button class="card-cart" @disabled($availableQuantity<1) @if($sku) wire:click="add({{ $sku->id }})" @endif wire:loading.attr="disabled"><span>{{ $availableQuantity>0?'Add to bag':'Out of stock' }}</span><span aria-hidden="true">＋</span></button>
 </article>

@@ -14,7 +14,7 @@ class StoreSettings extends Page implements HasSchemas {
     protected string $view='filament.pages.store-settings';
     public ?array $data=[];
     public static function canAccess(): bool{return auth()->user()?->role==='owner';}
-    public function mount(): void{$settings=app(\App\Services\StoreSettings::class);$values=[];foreach(\App\Services\StoreSettings::DEFAULTS as $key=>$default)$values[$key]=$settings->get($key);$this->form->fill($values);}
+    public function mount(): void{$settings=app(\App\Services\StoreSettings::class);$values=[];foreach(\App\Services\StoreSettings::DEFAULTS as $key=>$default)$values[$key]=$settings->get($key);$values['hero_slides']=$settings->get('hero_slides',[]);$this->form->fill($values);}
     public function form(Schema $schema): Schema{return $schema->components([
         TextInput::make('store_name')->required()->maxLength(100),TextInput::make('contact_email')->email(),TextInput::make('contact_phone')->maxLength(30),TextInput::make('contact_address')->maxLength(200),ColorPicker::make('primary_color')->required()->regex('/^#[0-9a-fA-F]{6}$/'),ColorPicker::make('accent_color')->required()->regex('/^#[0-9a-fA-F]{6}$/'),
         FileUpload::make('logo')->disk('public')->directory('branding')->image()->acceptedFileTypes(['image/jpeg','image/png','image/webp'])->maxSize(4096),FileUpload::make('hero_image')->disk('public')->directory('branding')->image()->acceptedFileTypes(['image/jpeg','image/png','image/webp'])->maxSize(4096),

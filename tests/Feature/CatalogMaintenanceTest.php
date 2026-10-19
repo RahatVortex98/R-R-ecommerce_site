@@ -88,6 +88,26 @@ class CatalogMaintenanceTest extends TestCase
         $this->assertDatabaseCount('products', 0);
     }
 
+    public function test_staff_can_save_and_reorder_uploaded_hero_banner_slides(): void
+    {
+        $this->actingAs(User::factory()->create(['role'=>'staff']));
+        \Filament\Facades\Filament::setCurrentPanel(\Filament\Facades\Filament::getPanel('admin'));
+        foreach(['first.jpg','second.jpg'] as $file){
+            Storage::disk('public')->put('branding/'.$file, file_get_contents(public_path('images/logo.jpg')));
+        }
+        $slides=[
+            ['image'=>'branding/second.jpg','alt'=>'Second banner first'],
+            ['image'=>'branding/first.jpg','alt'=>'First banner second'],
+        ];
+        Livewire::test(\App\Filament\Pages\StorefrontContent::class)
+            ->set('data.hero_slides', array_map(fn($slide)=>['image'=>[$slide['image']], 'alt'=>$slide['alt']], $slides))
+            ->call('save')->assertHasNoFormErrors();
+
+        $stored=array_values(app(\App\Services\StoreSettings::class)->get('hero_slides'));
+        $this->assertSame($slides, $stored);
+        $this->get('/')->assertOk()->assertSeeInOrder(['Second banner first', 'First banner second']);
+    }
+
     public function test_deleted_product_cannot_be_added_from_a_stale_shop_page(): void
     {
         $product = Product::create(['name' => 'Removed', 'slug' => 'removed', 'published' => true]);
