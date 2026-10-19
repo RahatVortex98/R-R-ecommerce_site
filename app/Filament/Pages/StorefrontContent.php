@@ -2,7 +2,7 @@
 
 namespace App\Filament\Pages;
 
-use Filament\Forms\Components\{FileUpload, TextInput, Textarea};
+use Filament\Forms\Components\{FileUpload, Repeater, TextInput, Textarea};
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
@@ -27,6 +27,12 @@ class StorefrontContent extends StoreSettings
                 $this->upload('hero_image', 'Homepage banner image'),
                 TextInput::make('hero_title')->required()->maxLength(120),
                 Textarea::make('hero_text')->required()->maxLength(500),
+                Repeater::make('hero_slides')->label('Hero carousel slides')
+                    ->helperText('Upload up to six banners and drag to reorder. Leave empty to use the homepage banner above.')
+                    ->schema([
+                        $this->upload('image', 'Banner image')->required(),
+                        TextInput::make('alt')->label('Image description')->required()->maxLength(200),
+                    ])->defaultItems(0)->maxItems(6)->reorderable()->addActionLabel('Add banner slide')->columnSpanFull(),
             ]),
             Section::make('Homepage product sections')->description('Published products with available stock appear newest first. Active sale prices also place products in Discount products. Add stock under Catalog → Inventory.')->schema([
                 TextInput::make('available_heading')->required()->maxLength(80),

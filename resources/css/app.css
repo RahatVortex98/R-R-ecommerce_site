@@ -1,5 +1,7 @@
 @import 'tailwindcss';
-
+.product-stock{display:flex;justify-content:space-between;gap:8px;padding:8px 0;margin-bottom:8px;border-top:1px solid var(--line);font-size:11px}.product-stock.in-stock{color:var(--forest)}.product-stock.out-of-stock{color:var(--muted)}
+.hero-carousel:before{display:none}.hero-slides{position:absolute;inset:0}.hero-carousel.has-controls .hero-slides{bottom:76px}.hero-slide{width:100%;height:100%;display:flex;align-items:center;justify-content:center}.hero-carousel .hero-slide img{width:100%;height:100%;object-fit:contain;transform:none;filter:none}.hero-carousel .art-label{top:16px;bottom:auto;right:16px;background:var(--cream);padding:4px 8px}.hero-carousel-controls{position:absolute;bottom:14px;left:12px;right:12px;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px}.hero-carousel-controls button{border:1px solid var(--line);background:var(--cream);color:var(--forest);min-width:40px;min-height:44px;border-radius:4px}.hero-carousel-dots{display:flex;align-items:center}.hero-carousel-controls .hero-carousel-dot{min-width:28px;border:0;background:transparent;position:relative}.hero-carousel-dot:after{content:'';display:block;width:8px;height:8px;margin:auto;border:1px solid var(--forest);border-radius:50%}.hero-carousel-dot[aria-pressed="true"]:after{background:var(--forest)}.hero-carousel-controls .hero-carousel-toggle{font-size:11px;padding:0 10px}
+@media(max-width:700px){.hero-carousel.has-controls .hero-slides{bottom:120px}}
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
