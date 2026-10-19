@@ -25,6 +25,29 @@ class CatalogTest extends TestCase
         $this->get('/shop?q=serum')->assertOk()->assertSee('Visible serum')->assertDontSee('Hidden cream');
     }
 
+    public function test_available_products_show_only_regular_prices_while_offers_keep_sale_details(): void
+    {
+        $product = Product::create(['name'=>'Everyday moisturizer','slug'=>'everyday-moisturizer','published'=>true]);
+        $product->skus()->create(['code'=>'MOISTURIZER','regular_minor'=>150000,'sale_minor'=>120000,'on_hand'=>5]);
+
+        $response = $this->get('/')->assertOk();
+        $document = new \DOMDocument();
+        @$document->loadHTML('<?xml encoding="UTF-8">'.$response->getContent());
+        $xpath = new \DOMXPath($document);
+        $available = $xpath->query('//section[.//h2[normalize-space(.)="Available products"]]')->item(0);
+        $discounts = $xpath->query('//section[.//h2[normalize-space(.)="Discount products"]]')->item(0);
+
+        $this->assertNotNull($available);
+        $this->assertNotNull($discounts);
+        $this->assertSame('৳1,500', trim($xpath->evaluate('string(.//div[@class="price"])', $available)));
+        $this->assertSame(0, $xpath->query('.//span[contains(@class,"sale")] | .//del | .//span[@class="saving"]', $available)->length);
+        $this->assertStringContainsString('৳1,200', $discounts->textContent);
+        $this->assertStringContainsString('Save ৳300', $discounts->textContent);
+        $this->assertStringContainsString('−20%', $discounts->textContent);
+
+        $this->get('/shop?sale=1')->assertOk()->assertSee('Save ৳300');
+    }
+
     public function test_sale_pricing_and_end_boundary(): void
     {
         $product = Product::create(['name'=>'Serum','slug'=>'serum','published'=>true]);
